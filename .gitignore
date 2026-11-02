@@ -1,0 +1,16 @@
+# Concorde and QSopt are academic-use only and may not be redistributed.
+# build_concorde.sh downloads and builds them here; see README → Concorde.
+Concorde/build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Xcode per-user and build files
+xcuserdata/
+DerivedData/
+build/
+*.xcuserstate
+
+# macOS
+.DS_Store
