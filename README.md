@@ -2,6 +2,10 @@
 
 An iPadOS app that shows step by step how different algorithms solve the
 Traveling Salesman Problem on real cities, drawn on Apple Maps (MapKit).
+A second tab shows Dijkstra's shortest-path algorithm on the same cities.
+
+The city sets are 4 preset regions (European Capitals, Germany, United
+States, World Megacities), and you can add any other city via search.
 
 ## Requirements
 
@@ -25,7 +29,12 @@ to something unique (e.g. `com.yourname.TSPExplorer`).
 
 ## Using the app
 
-The app is built as a presentation: a full-screen map and one card at the
+The app has two tabs at the bottom: **Round Trip** (the TSP) and
+**Shortest Path** (Dijkstra). Settings (⚙︎) are shared by both.
+
+### Round Trip
+
+The Round Trip tab is built as a presentation: a full-screen map and one card at the
 bottom that controls everything. It walks through the chapters in order:
 
 **Concorde** (the reference) → Nearest Neighbor → Greedy Edge → Farthest
@@ -49,6 +58,20 @@ whole talk. **⌘← ⌘→** = Back / Next at any time.
 **Map colours:** blue = tour, orange = being considered / just added,
 red dashed = rejected or removed, gray dashed = best tour so far,
 faint blue = pheromone (Ant Colony) or spanning tree (MST).
+
+### Shortest Path
+
+Each city gets roads to its 2–5 nearest cities (menu on the card), plus the few
+extra roads needed to keep the network connected. On a complete graph
+the direct road would always be the shortest path, so this makes the search
+interesting. Tap a city to choose the start, then another for the goal (or use
+the *From* / *To* menus), and play the animation: Dijkstra finalises the
+closest open city, relaxes its roads, and repeats until the goal is final.
+
+**Map colours:** gray = road, faint blue = best known road to each city,
+orange = road that just shortened a distance, red dashed = checked but not
+shorter, blue = shortest path. Filled cities are final; orange-ringed ones
+have a tentative distance.
 
 ## Algorithms
 
@@ -76,21 +99,29 @@ same animation, which helps for presentations.
 ```
 TSPExplorer/
 ├── TSPExplorerApp.swift        App entry point
+├── concorde_results.json       Precomputed Concorde results (bundled)
 ├── Model/
 │   ├── City.swift              City type + real city data (4 regions)
 │   ├── DistanceMatrix.swift    Haversine distances, tour length
 │   ├── SolverStep.swift        One animation frame + helpers
 │   ├── ExplorerModel.swift     App state, playback, camera
+│   ├── ShortestPathModel.swift State and playback of the Shortest Path tab
 │   └── Localization.swift      English / German texts
-├── Algorithms/                 One file per family; every algorithm
-│   └── …                       returns a list of SolverSteps
+├── Algorithms/                 One file per family; every TSP algorithm
+│   ├── …                       returns a list of SolverSteps
+│   ├── Concorde.swift          Replays concorde_results.json
+│   └── Dijkstra.swift          Road network + Dijkstra's algorithm
 └── Views/
-    ├── ContentView.swift       Full-screen map, the card, settings button
+    ├── ContentView.swift       The two tabs, settings button
     ├── TourMap.swift           MapKit drawing
     ├── ControlPanel.swift      The card: playback, Back / Next
     ├── ResultsView.swift       Last chapter: ranking and takeaways
     ├── AlgorithmInfoView.swift "How it works" popover
+    ├── ShortestPathView.swift  The Shortest Path tab
     └── SettingsView.swift      Language, city selection + MapKit search
+Concorde/
+├── build_concorde.sh           Downloads and builds Concorde + QSopt
+└── generate_results.py         Runs Concorde, writes concorde_results.json
 ```
 
 **Adding an algorithm:** add a case to `Algorithm` in `Algorithm.swift`, fill in
@@ -156,5 +187,17 @@ Then rebuild the app in Xcode. The JSON is picked up automatically.
   distance shows "+x% vs optimal", and the Results chapter ranks everything
   against it, with the optimal tour dashed on the map.
 
-If you mention Concorde in your project, credit its authors and see
-math.uwaterloo.ca/tsp/concorde.
+## Credits
+
+- **Concorde** by David Applegate, Robert Bixby, Vašek Chvátal and William Cook,
+  [math.uwaterloo.ca/tsp/concorde](https://www.math.uwaterloo.ca/tsp/concorde.html).
+  Only its results are included in this repository, not the solver.
+- **QSopt** by David Applegate, William Cook, Sanjeeb Dash and Monika Mevenkamp,
+  [math.uwaterloo.ca/~bico/qsopt](https://www.math.uwaterloo.ca/~bico/qsopt/).
+- Maps by Apple MapKit.
+
+## License
+
+The code in this repository is released under the [MIT License](LICENSE).
+This covers only this repository's own code, not Concorde or QSopt, which
+`build_concorde.sh` downloads separately under their own terms (see above).
